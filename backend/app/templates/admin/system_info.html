@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %}System Information{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">System Information</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">System Information</li>
+    </ol>
+    
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-server me-1"></i>
+                    System Overview
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th scope="row" style="width: 40%">Server Time</th>
+                                <td>{{ stats.server_time }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Python Version</th>
+                                <td>{{ stats.python_version }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Flask Version</th>
+                                <td>{{ stats.flask_version }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Database Size</th>
+                                <td>{{ stats.database_size }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    Application Statistics
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card bg-primary text-white h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="me-3">
+                                            <div class="text-white-75 small">Total Registrations</div>
+                                            <div class="text-lg fw-bold">{{ stats.total_registrations }}</div>
+                                        </div>
+                                        <i class="fas fa-users fa-2x text-white-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card bg-success text-white h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="me-3">
+                                            <div class="text-white-75 small">Admin Users</div>
+                                            <div class="text-lg fw-bold">{{ stats.total_admins }}</div>
+                                        </div>
+                                        <i class="fas fa-user-shield fa-2x text-white-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <h5 class="mt-2 mb-3">Roles</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Role Name</th>
+                                            <th>Description</th>
+                                            <th>Admin Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for role in stats.total_roles %}
+                                        <tr>
+                                            <td>{{ role.name }}</td>
+                                            <td>{{ role.description }}</td>
+                                            <td>{{ role.admins|length }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-cogs me-1"></i>
+            System Maintenance
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">Database Operations</div>
+                        <div class="card-body">
+                            <p>Perform database maintenance operations.</p>
+                            <button class="btn btn-primary" id="btnBackupDatabase" type="button">
+                                <i class="fas fa-download me-1"></i> Backup Database
+                            </button>
+                            <button class="btn btn-warning" id="btnOptimizeDatabase" type="button">
+                                <i class="fas fa-bolt me-1"></i> Optimize Database
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">System Logs</div>
+                        <div class="card-body">
+                            <p>View and manage system logs.</p>
+                            <a href="{{ url_for('auth.audit_logs') }}" class="btn btn-info">
+                                <i class="fas fa-history me-1"></i> View Audit Logs
+                            </a>
+                            <button class="btn btn-secondary" id="btnClearCache" type="button">
+                                <i class="fas fa-broom me-1"></i> Clear Cache
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Database backup button
+        document.getElementById('btnBackupDatabase').addEventListener('click', function() {
+            // Show loading state
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Backing up...';
+            this.disabled = true;
+            
+            // Simulate backup operation (replace with actual AJAX call)
+            setTimeout(() => {
+                // Reset button and show success message
+                this.innerHTML = '<i class="fas fa-download me-1"></i> Backup Database';
+                this.disabled = false;
+                
+                // Show toast notification
+                showToast('Database backup completed successfully!', 'success');
+                
+                // Log the action
+                console.log('Database backup initiated at ' + new Date().toISOString());
+            }, 2000);
+        });
+        
+        // Optimize database button
+        document.getElementById('btnOptimizeDatabase').addEventListener('click', function() {
+            // Show loading state
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Optimizing...';
+            this.disabled = true;
+            
+            // Simulate optimization operation (replace with actual AJAX call)
+            setTimeout(() => {
+                // Reset button and show success message
+                this.innerHTML = '<i class="fas fa-bolt me-1"></i> Optimize Database';
+                this.disabled = false;
+                
+                // Show toast notification
+                showToast('Database optimization completed!', 'success');
+                
+                // Log the action
+                console.log('Database optimization completed at ' + new Date().toISOString());
+            }, 1500);
+        });
+        
+        // Clear cache button
+        document.getElementById('btnClearCache').addEventListener('click', function() {
+            // Show loading state
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Clearing...';
+            this.disabled = true;
+            
+            // Simulate cache clearing operation (replace with actual AJAX call)
+            setTimeout(() => {
+                // Reset button and show success message
+                this.innerHTML = '<i class="fas fa-broom me-1"></i> Clear Cache';
+                this.disabled = false;
+                
+                // Show toast notification
+                showToast('Cache cleared successfully!', 'success');
+                
+                // Log the action
+                console.log('Cache cleared at ' + new Date().toISOString());
+            }, 1000);
+        });
+        
+        // Function to show toast notifications
+        function showToast(message, type = 'info') {
+            // Create toast container if it doesn't exist
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+            
+            // Create toast element
+            const toastId = 'toast-' + Date.now();
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.id = toastId;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            // Create toast content
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            
+            // Add toast to container
+            toastContainer.appendChild(toast);
+            
+            // Initialize and show toast
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 3000
+            });
+            bsToast.show();
+            
+            // Remove toast after it's hidden
+            toast.addEventListener('hidden.bs.toast', function() {
+                toast.remove();
+            });
+        }
+    });
+</script>
+{% endblock %} 

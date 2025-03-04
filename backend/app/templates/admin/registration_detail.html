@@ -1,0 +1,210 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Registration Details - SOD 2025 Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .receipt-img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+    }
+    
+    .qr-code-img {
+        max-width: 200px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background: white;
+    }
+    
+    .status-badge {
+        font-size: 1rem;
+        padding: 8px 12px;
+    }
+    
+    .action-buttons {
+        margin-top: 20px;
+    }
+    
+    .checkin-history {
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Registration Details</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.registrations') }}" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+        {% if registration.is_archived %}
+        <form action="{{ url_for('admin.unarchive_registration', registration_id=registration.id) }}" method="post" class="me-2" onsubmit="return confirm('Are you sure you want to unarchive this registration?');">
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="fas fa-box-open"></i> Unarchive
+            </button>
+        </form>
+        {% else %}
+        <form action="{{ url_for('admin.archive_registration', registration_id=registration.id) }}" method="post" class="me-2" onsubmit="return confirm('Are you sure you want to archive this registration? It will be hidden from the main list.');">
+            <button type="submit" class="btn btn-sm btn-warning">
+                <i class="fas fa-archive"></i> Archive
+            </button>
+        </form>
+        {% endif %}
+        <form action="{{ url_for('admin.delete_registration', registration_id=registration.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this registration? This action cannot be undone.');">
+            <button type="submit" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash"></i> Delete Registration
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Personal Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Registration ID:</th>
+                        <td>{{ registration.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Name:</th>
+                        <td>{{ registration.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ registration.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Phone:</th>
+                        <td>{{ registration.phone_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            <span class="badge status-badge
+                                {% if registration.status.name == 'PENDING_PAYMENT' %}bg-warning text-dark
+                                {% elif registration.status.name == 'PENDING_VERIFICATION' %}bg-info text-dark
+                                {% elif registration.status.name == 'CONFIRMED' %}bg-success
+                                {% elif registration.status.name == 'REJECTED' %}bg-danger
+                                {% endif %}">
+                                {{ registration.status.value }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Registration Date:</th>
+                        <td>{{ registration.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Updated:</th>
+                        <td>{{ registration.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                    {% if registration.is_archived %}
+                    <tr>
+                        <th>Archived:</th>
+                        <td><span class="badge bg-secondary">Yes</span></td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+        
+        {% if registration.status.name == 'CONFIRMED' %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>QR Code</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if registration.qr_code %}
+                <img src="{{ url_for('static', filename='qrcodes/' + registration.id|string + '.png') }}" alt="QR Code" class="qr-code-img">
+                <p class="mt-2">This QR code is used for check-in at the event.</p>
+                {% else %}
+                <p class="text-muted">No QR code generated yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Payment Receipt</h5>
+            </div>
+            <div class="card-body">
+                {% if registration.receipt_url %}
+                <div class="text-center">
+                    <p class="text-muted mb-2">Receipt URL: {{ registration.receipt_url }}</p>
+                    <img src="{{ url_for('static', filename=registration.receipt_url.replace('\\', '/').replace('//', '/')) }}" alt="Receipt" class="receipt-img">
+                </div>
+                
+                {% if registration.status.name == 'PENDING_VERIFICATION' %}
+                <div class="action-buttons d-flex justify-content-center">
+                    <form action="{{ url_for('admin.approve_receipt', registration_id=registration.id) }}" method="post" class="me-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Approve Receipt
+                        </button>
+                    </form>
+                    <form action="{{ url_for('admin.reject_receipt', registration_id=registration.id) }}" method="post">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Reject Receipt
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <p class="text-center text-muted">No receipt uploaded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Check-in History</h5>
+            </div>
+            <div class="card-body">
+                {% if registration.check_ins %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Check-in ID</th>
+                            <th>Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for check_in in registration.check_ins %}
+                        <tr>
+                            <td>{{ check_in.id }}</td>
+                            <td>{{ check_in.check_in_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-center text-muted">No check-ins recorded yet.</p>
+                
+                {% if registration.status.name == 'CONFIRMED' %}
+                <div class="text-center mt-3">
+                    <form action="{{ url_for('admin.check_in', registration_id=registration.id) }}" method="post">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Check-in Attendee
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+                
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,49 @@
+# Environment variables
+.env
+
+# Python virtual environment
+venv/
+env/
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Logs
+logs/
+*.log
+
+# Uploads and user data
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+app/static/qrcodes/*
+!app/static/qrcodes/.gitkeep
+
+# Database
+*.db
+*.sqlite3
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo 

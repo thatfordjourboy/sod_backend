@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2025-03-03T22:12:43.763575",
+    "recipients": [
+      "quaysoneleazer@gmail.com"
+    ],
+    "subject": "SOD 2025 - Registration Confirmation",
+    "filepath": "C:\\Users\\DL News\\Desktop\\sod_2025\\backend\\app\\emails\\email_20250303_221243.html"
+  },
+  {
+    "timestamp": "2025-03-03T22:12:45.247483",
+    "recipients": [
+      "quaysoneleazer@gmail.com"
+    ],
+    "subject": "SOD 2025 - Receipt Submission Confirmation",
+    "filepath": "C:\\Users\\DL News\\Desktop\\sod_2025\\backend\\app\\emails\\email_20250303_221245.html"
+  },
+  {
+    "timestamp": "2025-03-03T22:12:58.254491",
+    "recipients": [
+      "quaysoneleazer@gmail.com"
+    ],
+    "subject": "Payment Confirmed - SOD 2025 Registration",
+    "filepath": "C:\\Users\\DL News\\Desktop\\sod_2025\\backend\\app\\emails\\email_20250303_221258.html"
+  }
+]

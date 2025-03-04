@@ -1,0 +1,112 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Export Attendees{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mb-4">Export Attendees</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Filter Options</h3>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ url_for('admin.preview_attendees') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Registration Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Statuses</option>
+                                {% for status in statuses %}
+                                <option value="{{ status.name }}" {% if selected_status == status.name %}selected{% endif %}>{{ status.value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>Attendees Preview</h3>
+                    <a href="{{ url_for('admin.export_attendees', status=selected_status) }}" class="btn btn-success">
+                        <i class="fas fa-file-export"></i> Export to CSV
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="attendees-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                    <th>Registration Date</th>
+                                    <th>Checked In</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reg in registrations %}
+                                <tr>
+                                    <td>{{ reg.id }}</td>
+                                    <td>{{ reg.name }}</td>
+                                    <td>{{ reg.email }}</td>
+                                    <td>{{ reg.phone_number }}</td>
+                                    <td>
+                                        {% if reg.status.name == 'CONFIRMED' %}
+                                        <span class="badge bg-success">{{ reg.status.value }}</span>
+                                        {% elif reg.status.name == 'PENDING_VERIFICATION' %}
+                                        <span class="badge bg-warning">{{ reg.status.value }}</span>
+                                        {% elif reg.status.name == 'PENDING_PAYMENT' %}
+                                        <span class="badge bg-info">{{ reg.status.value }}</span>
+                                        {% elif reg.status.name == 'REJECTED' %}
+                                        <span class="badge bg-danger">{{ reg.status.value }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ reg.status.value }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ reg.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        {% if reg.check_ins %}
+                                        <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTables
+        $('#attendees-table').DataTable({
+            "pageLength": 25,
+            "order": [[5, "desc"]], // Sort by registration date by default
+            "language": {
+                "search": "Search attendees:",
+                "lengthMenu": "Show _MENU_ attendees per page",
+                "info": "Showing _START_ to _END_ of _TOTAL_ attendees",
+                "infoEmpty": "Showing 0 to 0 of 0 attendees",
+                "infoFiltered": "(filtered from _MAX_ total attendees)"
+            }
+        });
+    });
+</script>
+{% endblock %} 
