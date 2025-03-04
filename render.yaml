@@ -6,10 +6,11 @@ services:
     plan: free  # Specify the plan
     buildCommand: |
       pip install -r requirements.txt
-      mkdir -p instance
-      mkdir -p app/static/uploads
-      mkdir -p app/static/qrcodes
-      mkdir -p logs
+      mkdir -p /opt/render/project/src/backend/instance
+      mkdir -p /opt/render/project/src/backend/app/static/uploads
+      mkdir -p /opt/render/project/src/backend/app/static/qrcodes
+      mkdir -p /opt/render/project/src/backend/logs
+      cd backend
       flask db upgrade
       python create_admin.py
       python init_audit_permissions.py
@@ -23,7 +24,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URI
-        value: sqlite:///instance/app.db
+        value: sqlite:////opt/render/project/src/backend/instance/app.db
       - key: LOG_LEVEL
         value: INFO
 
