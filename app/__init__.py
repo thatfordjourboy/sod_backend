@@ -91,7 +91,8 @@ def create_app(config_class=Config):
     
     return app
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app = create_app()
-    app.run(host='0.0.0.0', port=port)
+# Create the application instance
+app = create_app()
+
+# Make the app instance available at the top level
+__all__ = ['app', 'create_app']

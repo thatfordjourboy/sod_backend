@@ -2,6 +2,8 @@ services:
   - type: web
     name: sod-2025-backend
     env: python
+    region: ohio  # Choose the region closest to your users
+    plan: free  # Specify the plan
     buildCommand: |
       pip install -r requirements.txt
       mkdir -p instance
@@ -11,7 +13,7 @@ services:
       flask db upgrade
       python create_admin.py
       python init_audit_permissions.py
-    startCommand: gunicorn --workers 4 --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - --log-level info wsgi:application
+    startCommand: cd backend && gunicorn "app:app"
     envVars:
       # Flask configuration
       - key: FLASK_APP
@@ -22,6 +24,8 @@ services:
         generateValue: true
       - key: DATABASE_URI
         value: sqlite:///instance/app.db
+      - key: LOG_LEVEL
+        value: INFO
 
       # Python configuration
       - key: PYTHON_VERSION
@@ -36,6 +40,8 @@ services:
         value: app/static/uploads
       - key: QR_CODE_FOLDER
         value: app/static/qrcodes
+      - key: LOG_DIR
+        value: logs
       
       # Email configuration
       - key: MAIL_SERVER
@@ -68,5 +74,9 @@ services:
       mountPath: /opt/render/project/src/backend/app/static
       sizeGB: 1
     
+    # Health Check Configuration
     healthCheckPath: /health
-    healthCheckTimeout: 100 
+    healthCheckTimeout: 100
+    
+    # Auto-Deploy Configuration
+    autoDeploy: true 
