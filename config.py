@@ -6,7 +6,7 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI', 'sqlite:///instance/app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'app/static/uploads')
     QR_CODE_FOLDER = os.environ.get('QR_CODE_FOLDER', 'app/static/qrcodes')
@@ -32,4 +32,11 @@ class Config:
     MAIL_DEBUG = os.environ.get('MAIL_DEBUG', 'False').lower() == 'true'  # Set to False in production
     MAIL_MAX_EMAILS = int(os.environ.get('MAIL_MAX_EMAILS', 100))  # Increased for production
     MAIL_SUPPRESS_SEND = os.environ.get('MAIL_SUPPRESS_SEND', 'False').lower() == 'true'
-    MAIL_ASCII_ATTACHMENTS = os.environ.get('MAIL_ASCII_ATTACHMENTS', 'False').lower() == 'true' 
+    MAIL_ASCII_ATTACHMENTS = os.environ.get('MAIL_ASCII_ATTACHMENTS', 'False').lower() == 'true'
+
+    @staticmethod
+    def init_app(app):
+        # Create necessary directories
+        os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, 'static', 'uploads'), exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, 'static', 'qrcodes'), exist_ok=True) 
