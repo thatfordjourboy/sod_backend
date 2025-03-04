@@ -1,0 +1,24 @@
+Dear {{ registration.full_name }},
+
+Thank you for registering for Steam-Off Daycation (SOD) 2025! We're excited to have you join us.
+
+Registration Details:
+- Full Name: {{ registration.full_name }}
+- Email: {{ registration.email }}
+- Phone: {{ registration.phone }}
+- Registration Date: {{ registration.created_at.strftime('%B %d, %Y') }}
+
+Your registration is currently pending verification of payment. We will review your payment proof and send you a confirmation email once verified.
+
+Event Details:
+- Date: March 6, 2025
+- Time: TBD
+- Location: To be announced (will be shared with confirmed attendees)
+
+If you have any questions, please don't hesitate to contact us at:
+- Email: info@sod2025.com
+- Phone: +233 26 435 5165
+- WhatsApp: +233 55 348 0047
+
+Best regards,
+SOD 2025 Team 

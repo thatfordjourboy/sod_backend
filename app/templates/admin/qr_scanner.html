@@ -1,0 +1,144 @@
+{% extends "admin/base.html" %}
+
+{% block title %}QR Scanner - SOD 2025 Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">QR Code Scanner</h5>
+                    <p class="text-muted mb-0">Scan attendee QR codes for check-in</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 mx-auto">
+                            <!-- Scanner Container -->
+                            <div id="reader-container" class="mb-4">
+                                <div id="reader" style="width: 100%; max-width: 640px; margin: 0 auto;"></div>
+                            </div>
+                            
+                            <!-- Result Container -->
+                            <div id="result" class="alert d-none">
+                                <p id="result-text" class="mb-0"></p>
+                            </div>
+
+                            <!-- Controls -->
+                            <div class="text-center mt-3">
+                                <button id="startButton" class="btn btn-primary me-2">
+                                    <i class="fas fa-play me-2"></i>Start Scanner
+                                </button>
+                                <button id="stopButton" class="btn btn-danger" style="display: none;">
+                                    <i class="fas fa-stop me-2"></i>Stop Scanner
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    let html5QrCode = null;
+
+    function showResult(message, type = 'info') {
+        const resultDiv = document.getElementById('result');
+        const resultText = document.getElementById('result-text');
+        resultDiv.className = `alert alert-${type}`;
+        resultDiv.classList.remove('d-none');
+        resultText.innerText = message;
+    }
+
+    function hideResult() {
+        const resultDiv = document.getElementById('result');
+        resultDiv.classList.add('d-none');
+    }
+
+    function updateButtons(scanning) {
+        document.getElementById('startButton').style.display = scanning ? 'none' : 'inline-block';
+        document.getElementById('stopButton').style.display = scanning ? 'inline-block' : 'none';
+    }
+
+    async function processQrCode(decodedText) {
+        try {
+            showResult('Processing QR Code...', 'info');
+            const response = await fetch('/admin/process-qr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ qr_data: decodedText })
+            });
+            
+            const data = await response.json();
+            showResult(data.message, data.success ? 'success' : 'danger');
+        } catch (error) {
+            console.error('Error:', error);
+            showResult('Error: Could not process QR code', 'danger');
+        }
+    }
+
+    document.getElementById('startButton').addEventListener('click', function() {
+        hideResult();
+        
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+        }
+
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+        };
+
+        html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            async (decodedText, decodedResult) => {
+                await html5QrCode.stop();
+                updateButtons(false);
+                await processQrCode(decodedText);
+            },
+            (errorMessage) => {
+                // Ignore errors during scanning
+            }
+        ).then(() => {
+            updateButtons(true);
+        }).catch((err) => {
+            console.error(`Unable to start scanning: ${err}`);
+            showResult(`Unable to start scanner: ${err}`, 'danger');
+            updateButtons(false);
+        });
+    });
+
+    document.getElementById('stopButton').addEventListener('click', async function() {
+        if (html5QrCode) {
+            try {
+                await html5QrCode.stop();
+                updateButtons(false);
+                hideResult();
+            } catch (err) {
+                console.error(err);
+                showResult('Error stopping scanner', 'danger');
+            }
+        }
+    });
+
+    // Cleanup when leaving the page
+    window.addEventListener('beforeunload', async function() {
+        if (html5QrCode) {
+            try {
+                await html5QrCode.stop();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    });
+</script>
+{% endblock %} 

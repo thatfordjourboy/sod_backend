@@ -1,0 +1,90 @@
+<!-- Sidebar navigation -->
+<div id="layoutSidenav_nav">
+    <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+        <div class="sb-sidenav-menu">
+            <div class="nav">
+                <div class="sb-sidenav-menu-heading text-uppercase">Core</div>
+                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    Dashboard
+                </a>
+                
+                <div class="sb-sidenav-menu-heading text-uppercase">Registration</div>
+                <a class="nav-link" href="{{ url_for('admin.registrations') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+                    Registrations
+                </a>
+                <a class="nav-link" href="{{ url_for('admin.preview_attendees') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-file-export"></i></div>
+                    Export Attendees
+                </a>
+                <a class="nav-link" href="{{ url_for('admin.check_in') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-clipboard-check"></i></div>
+                    Check-in
+                </a>
+                <a class="nav-link" href="{{ url_for('admin.qr_scanner') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-qrcode"></i></div>
+                    QR Scanner
+                </a>
+                
+                <div class="sb-sidenav-menu-heading text-uppercase">Administration</div>
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseAdmin" aria-expanded="false" aria-controls="collapseAdmin">
+                    <div class="sb-nav-link-icon"><i class="fas fa-cog"></i></div>
+                    Admin
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseAdmin" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                            <div class="sb-nav-link-icon"><i class="fas fa-user-shield"></i></div>
+                            User Management
+                        </a>
+                        <a class="nav-link" href="{{ url_for('auth.audit_logs') }}">
+                            <div class="sb-nav-link-icon"><i class="fas fa-history"></i></div>
+                            Audit Logs
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        <div class="sb-sidenav-footer">
+            <div class="d-flex align-items-center">
+                <div class="avatar-circle me-2">
+                    <span class="avatar-initials">{{ current_user.email[0]|upper }}</span>
+                </div>
+                <div class="small">
+                    <div class="fw-bold text-truncate" style="max-width: 150px;">{{ current_user.email }}</div>
+                    <div class="text-muted">{{ current_user.role.name }}</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 32px;
+        height: 32px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .avatar-initials {
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    
+    .sb-sidenav-menu-heading {
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+        opacity: 0.7;
+    }
+    
+    .sb-sidenav-footer {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+</style> 
