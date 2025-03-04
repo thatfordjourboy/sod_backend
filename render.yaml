@@ -5,10 +5,12 @@ services:
     buildCommand: |
       pip install -r requirements.txt
       mkdir -p instance
+      mkdir -p app/static/uploads
+      mkdir -p app/static/qrcodes
       flask db upgrade
       python create_admin.py
       python init_audit_permissions.py
-    startCommand: cd backend && gunicorn wsgi:application
+    startCommand: gunicorn --workers 4 --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - wsgi:application
     envVars:
       - key: FLASK_APP
         value: app
@@ -16,6 +18,14 @@ services:
         value: production
       - key: PYTHON_VERSION
         value: 3.9.12
+      - key: PYTHONPATH
+        value: /opt/render/project/src/backend
+      - key: STATIC_FOLDER
+        value: app/static
+      - key: UPLOAD_FOLDER
+        value: app/static/uploads
+      - key: QR_CODE_FOLDER
+        value: app/static/qrcodes
     disk:
       name: uploads
       mountPath: /opt/render/project/src/backend/app/static
