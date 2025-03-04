@@ -4,10 +4,11 @@ services:
     env: python
     buildCommand: |
       pip install -r requirements.txt
+      mkdir -p instance
       flask db upgrade
       python create_admin.py
       python init_audit_permissions.py
-    startCommand: gunicorn app:app
+    startCommand: cd backend && gunicorn "app:create_app()"
     envVars:
       - key: FLASK_APP
         value: app
@@ -17,5 +18,5 @@ services:
         value: 3.9.12
     disk:
       name: uploads
-      mountPath: /app/static
+      mountPath: /opt/render/project/src/backend/app/static
       sizeGB: 1 

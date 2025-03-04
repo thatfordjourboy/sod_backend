@@ -17,9 +17,15 @@ mail = Mail()
 def create_app(config_class=Config):
     app = Flask(__name__)
     
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+    
     # Load configuration
     app.config.from_object(config_class)
-    config_class.init_app(app)  # Initialize app configuration
+    config_class.init_app(app)
+    
+    # Ensure instance directory exists
+    os.makedirs('instance', exist_ok=True)
     
     # Initialize extensions
     db.init_app(app)
@@ -28,6 +34,13 @@ def create_app(config_class=Config):
         r"/*": {"origins": app.config['CORS_ORIGINS']}
     })
     mail.init_app(app)
+    
+    # Create all database tables
+    with app.app_context():
+        try:
+            db.create_all()
+        except Exception as e:
+            app.logger.error(f"Error creating database tables: {str(e)}")
     
     from .models.user import Admin, Permission, Role, Registration, RegistrationStatus, AuditLog, CheckIn
     
@@ -66,16 +79,19 @@ def create_app(config_class=Config):
             'CheckIn': CheckIn
         }
     
-    # Create upload directories if they don't exist
-    upload_dir = os.path.join(app.root_path, 'static', 'uploads')
-    qr_dir = os.path.join(app.root_path, 'static', 'qrcodes')
-    os.makedirs(upload_dir, exist_ok=True)
-    os.makedirs(qr_dir, exist_ok=True)
+    # Error handlers
+    @app.errorhandler(500)
+    def internal_error(error):
+        app.logger.error(f'Server Error: {error}')
+        return render_template('errors/500.html'), 500
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
     
     return app
 
-app = create_app()
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+    app = create_app()
     app.run(host='0.0.0.0', port=port)
