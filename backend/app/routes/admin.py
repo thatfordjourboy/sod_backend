@@ -89,55 +89,74 @@ def view_registration(registration_id):
 
 @admin_bp.route('/approve-receipt/<int:registration_id>', methods=['POST'])
 @login_required
-@permission_required(Permission.APPROVE_REGISTRATIONS)
+@permission_required(Permission.MANAGE_REGISTRATIONS)
 def approve_receipt(registration_id):
-    """Approve a receipt and confirm registration"""
+    """Approve a registration receipt"""
     registration = Registration.query.get_or_404(registration_id)
     
-    # Only process if in pending verification status
     if registration.status != RegistrationStatus.PENDING_VERIFICATION:
-        flash('This registration is not pending verification', 'warning')
-        return redirect(url_for('admin.view_registration', registration_id=registration_id))
+        return jsonify({
+            'success': False,
+            'message': 'Registration is not pending verification'
+        }), 400
     
-    # Update status to confirmed
-    registration.status = RegistrationStatus.CONFIRMED
-    
-    # Generate QR code if not already generated
-    if not registration.qr_code:
-        qr_data = registration.generate_qr_data()
-        qr_code_path = generate_qr_code(qr_data, registration.id)
-        registration.qr_code = qr_code_path
-    
-    db.session.commit()
-    
-    # Send confirmation email
-    send_payment_confirmation(registration)
-    
-    flash('Registration confirmed successfully', 'success')
-    return redirect(url_for('admin.view_registration', registration_id=registration_id))
+    try:
+        registration.status = RegistrationStatus.CONFIRMED
+        db.session.commit()
+        
+        # Send confirmation email
+        send_payment_confirmation(registration)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Registration approved successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error approving registration {registration_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'An error occurred while approving the registration'
+        }), 500
 
 @admin_bp.route('/reject-receipt/<int:registration_id>', methods=['POST'])
 @login_required
-@permission_required(Permission.REJECT_REGISTRATIONS)
+@permission_required(Permission.MANAGE_REGISTRATIONS)
 def reject_receipt(registration_id):
-    """Reject a receipt and request reupload"""
+    """Reject a registration receipt"""
     registration = Registration.query.get_or_404(registration_id)
-    reason = request.form.get('reason', '')
     
-    # Only process if in pending verification status
     if registration.status != RegistrationStatus.PENDING_VERIFICATION:
-        flash('This registration is not pending verification', 'warning')
-        return redirect(url_for('admin.view_registration', registration_id=registration_id))
+        return jsonify({
+            'success': False,
+            'message': 'Registration is not pending verification'
+        }), 400
     
-    # Update status to rejected
-    registration.status = RegistrationStatus.REJECTED
-    db.session.commit()
+    data = request.get_json()
+    if not data or 'reason' not in data:
+        return jsonify({
+            'success': False,
+            'message': 'Rejection reason is required'
+        }), 400
     
-    # Send rejection email
-    send_receipt_rejection(registration, reason)
-    
-    flash('Receipt rejected successfully', 'success')
-    return redirect(url_for('admin.view_registration', registration_id=registration_id))
+    try:
+        registration.status = RegistrationStatus.REJECTED
+        db.session.commit()
+        
+        # Send rejection email
+        send_receipt_rejection(registration, data['reason'])
+        
+        return jsonify({
+            'success': True,
+            'message': 'Registration rejected successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error rejecting registration {registration_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'An error occurred while rejecting the registration'
+        }), 500
 
 @admin_bp.route('/check-in/<int:registration_id>', methods=['POST'])
 @login_required
@@ -245,8 +264,12 @@ def send_reminder():
 @permission_required(Permission.VIEW_REGISTRATIONS)
 def pending_verifications():
     """View all pending verifications"""
-    # Get all pending verifications
-    pending = Registration.query.filter_by(status=RegistrationStatus.PENDING_VERIFICATION).order_by(Registration.updated_at.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    
+    # Get paginated pending verifications
+    pending = Registration.query.filter_by(status=RegistrationStatus.PENDING_VERIFICATION)\
+        .order_by(Registration.updated_at.desc())\
+        .paginate(page=page, per_page=20, error_out=False)
     
     return render_template('admin/pending_verifications.html', registrations=pending)
 
@@ -702,4 +725,42 @@ def get_database_size():
         return "Unknown"
     except Exception as e:
         current_app.logger.error(f"Error getting database size: {str(e)}")
-        return "Error" 
+        return "Error"
+
+@admin_bp.route('/create-account', methods=['GET', 'POST'])
+@login_required
+@permission_required(Permission.MANAGE_ADMINS)
+def create_account():
+    """Create a new admin account"""
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role = request.form.get('role')
+
+        if not all([email, password, role]):
+            flash('All fields are required', 'error')
+            return redirect(url_for('admin.create_account'))
+
+        # Check if admin already exists
+        if Admin.query.filter_by(email=email).first():
+            flash('An admin with this email already exists', 'error')
+            return redirect(url_for('admin.create_account'))
+
+        # Create new admin
+        admin = Admin(email=email)
+        admin.set_password(password)
+        
+        # Assign role
+        role_obj = Role.query.filter_by(name=role).first()
+        if role_obj:
+            admin.role = role_obj
+        
+        db.session.add(admin)
+        db.session.commit()
+
+        flash('Admin account created successfully', 'success')
+        return redirect(url_for('admin.dashboard'))
+
+    # GET request - render form
+    roles = Role.query.all()
+    return render_template('admin/create_account.html', roles=roles) 

@@ -1,62 +1,40 @@
 from app import create_app, db
-from app.models.user import Role, Permission, Admin
+from app.models.user import Admin, Role, Permission
 
-def init_roles_and_admin():
+def create_admin_user():
     app = create_app()
     with app.app_context():
-        # Create roles
-        roles = [
-            {'name': Role.ADMIN, 'description': 'Full access to all features'},
-            {'name': Role.MANAGER, 'description': 'Can manage all aspects except admin users'},
-            {'name': Role.REGISTRAR, 'description': 'Can manage registrations and approvals'},
-            {'name': Role.CHECKER, 'description': 'Can check in attendees'},
-            {'name': Role.VIEWER, 'description': 'Can only view data'}
-        ]
-        
-        for role_data in roles:
-            role = Role.query.filter_by(name=role_data['name']).first()
-            if not role:
-                role = Role(**role_data)
-                db.session.add(role)
-                print(f"Created role: {role_data['name']}")
-        
-        # Create permissions
-        permissions = [
-            {'name': Permission.VIEW_DASHBOARD, 'description': 'Can view the admin dashboard'},
-            {'name': Permission.VIEW_REGISTRATIONS, 'description': 'Can view registrations'},
-            {'name': Permission.APPROVE_REGISTRATIONS, 'description': 'Can approve registrations'},
-            {'name': Permission.REJECT_REGISTRATIONS, 'description': 'Can reject registrations'},
-            {'name': Permission.CHECK_IN_ATTENDEES, 'description': 'Can check in attendees'},
-            {'name': Permission.EXPORT_DATA, 'description': 'Can export data'},
-            {'name': Permission.SEND_EMAILS, 'description': 'Can send emails'},
-            {'name': Permission.MANAGE_ADMINS, 'description': 'Can manage admin users'}
-        ]
-        
-        for perm_data in permissions:
-            perm = Permission.query.filter_by(name=perm_data['name']).first()
-            if not perm:
-                perm = Permission(**perm_data)
-                db.session.add(perm)
-                print(f"Created permission: {perm_data['name']}")
-        
-        # Create admin role
-        admin_role = Role.query.filter_by(name=Role.ADMIN).first()
-        
-        # Create first admin
-        email = input("Enter admin email: ")
-        password = input("Enter admin password: ")
-        
-        existing_admin = Admin.query.filter_by(email=email).first()
-        if existing_admin:
-            print(f"Admin with email {email} already exists.")
-            return
-        
-        admin = Admin(email=email, role_id=admin_role.id)
-        admin.set_password(password)
-        db.session.add(admin)
-        db.session.commit()
-        
-        print(f"Created admin with email {email}")
+        # Create admin role if it doesn't exist
+        admin_role = Role.query.filter_by(name='Admin').first()
+        if not admin_role:
+            admin_role = Role(name='Admin', description='Administrator with full access')
+            admin_role.permissions = [
+                Permission.VIEW_REGISTRATIONS,
+                Permission.MANAGE_REGISTRATIONS,
+                Permission.CHECK_IN_ATTENDEES,
+                Permission.EXPORT_DATA,
+                Permission.SEND_EMAILS,
+                Permission.MANAGE_ADMINS,
+                Permission.MANAGE_SYSTEM
+            ]
+            db.session.add(admin_role)
+            db.session.commit()
+
+        # Create default admin user if it doesn't exist
+        admin = Admin.query.filter_by(email='quaysoneleazer@gmail.com').first()
+        if not admin:
+            admin = Admin(
+                email='quaysoneleazer@gmail.com',
+                role=admin_role
+            )
+            admin.set_password('admin123')  # Set a default password
+            db.session.add(admin)
+            db.session.commit()
+            print("Admin user created successfully!")
+            print("Email: quaysoneleazer@gmail.com")
+            print("Password: admin123")
+        else:
+            print("Admin user already exists!")
 
 if __name__ == '__main__':
-    init_roles_and_admin() 
+    create_admin_user() 

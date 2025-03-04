@@ -92,6 +92,16 @@
                             </div>
                         </a>
                     </div>
+                    {% if current_user.has_permission(Permission.MANAGE_ADMINS) %}
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('admin.create_account') }}" class="btn btn-success btn-lg w-100 d-flex align-items-center justify-content-center" style="height: 100px;">
+                            <div class="text-center">
+                                <i class="fas fa-user-plus fa-3x mb-2"></i>
+                                <div>Create Account</div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
