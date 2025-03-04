@@ -15,8 +15,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('app.log')
+        logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
@@ -33,11 +32,19 @@ def create_app(config_class=Config):
         # Load configuration
         app.config.from_object(config_class)
         
-        # Ensure all required directories exist
-        os.makedirs(os.path.dirname(app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')), exist_ok=True)
-        os.makedirs(os.path.join(app.root_path, app.config['UPLOAD_FOLDER']), exist_ok=True)
-        os.makedirs(os.path.join(app.root_path, app.config['QR_CODE_FOLDER']), exist_ok=True)
-        os.makedirs(os.path.join(app.root_path, app.config['LOG_DIR']), exist_ok=True)
+        # Set up base directory
+        base_dir = '/opt/render/project/src/backend'
+        instance_dir = os.path.join(base_dir, 'instance')
+        static_dir = os.path.join(base_dir, 'app/static')
+        uploads_dir = os.path.join(static_dir, 'uploads')
+        qrcodes_dir = os.path.join(static_dir, 'qrcodes')
+        logs_dir = os.path.join(base_dir, 'logs')
+        
+        # Create directories
+        for directory in [instance_dir, static_dir, uploads_dir, qrcodes_dir, logs_dir]:
+            if not os.path.exists(directory):
+                os.makedirs(directory, exist_ok=True)
+                logger.info(f"Created directory: {directory}")
         
         # Initialize extensions
         db.init_app(app)

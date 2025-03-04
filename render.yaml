@@ -6,10 +6,6 @@ services:
     plan: free  # Specify the plan
     buildCommand: |
       pip install -r requirements.txt
-      mkdir -p /opt/render/project/src/backend/instance
-      mkdir -p /opt/render/project/src/backend/app/static/uploads
-      mkdir -p /opt/render/project/src/backend/app/static/qrcodes
-      mkdir -p /opt/render/project/src/backend/logs
       cd backend
       flask db upgrade
       python create_admin.py
@@ -36,13 +32,13 @@ services:
       
       # Static files configuration
       - key: STATIC_FOLDER
-        value: app/static
+        value: /opt/render/project/src/backend/app/static
       - key: UPLOAD_FOLDER
-        value: app/static/uploads
+        value: /opt/render/project/src/backend/app/static/uploads
       - key: QR_CODE_FOLDER
-        value: app/static/qrcodes
+        value: /opt/render/project/src/backend/app/static/qrcodes
       - key: LOG_DIR
-        value: logs
+        value: /opt/render/project/src/backend/logs
       
       # Email configuration
       - key: MAIL_SERVER
