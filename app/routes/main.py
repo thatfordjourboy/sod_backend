@@ -117,4 +117,21 @@ def verify_phone(phone):
 @main_bp.route('/')
 def root():
     """Redirect to login page"""
-    return redirect(url_for('auth.login')) 
+    return redirect(url_for('auth.login'))
+
+@main_bp.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    try:
+        # Test database connection
+        db.session.execute('SELECT 1')
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'database': 'disconnected',
+            'error': str(e)
+        }), 500 

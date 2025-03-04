@@ -18,6 +18,11 @@ class Config:
     STATIC_FOLDER = os.environ.get('STATIC_FOLDER', 'app/static')
     MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 5 * 1024 * 1024))  # 5MB default
     
+    # Logging configuration
+    LOG_DIR = os.environ.get('LOG_DIR', 'logs')
+    LOG_FILE = os.path.join(LOG_DIR, 'sod_backend.log')
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+    
     # CORS configuration
     CORS_ORIGINS = [
         'http://localhost:3000',  # Next.js development server
@@ -46,19 +51,16 @@ class Config:
         os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
         os.makedirs(os.path.join(app.root_path, app.config['UPLOAD_FOLDER']), exist_ok=True)
         os.makedirs(os.path.join(app.root_path, app.config['QR_CODE_FOLDER']), exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, app.config['LOG_DIR']), exist_ok=True)
         
         # Set up production logging
         if not app.debug and not app.testing:
             import logging
             from logging.handlers import RotatingFileHandler
             
-            # Ensure log directory exists
-            if not os.path.exists('logs'):
-                os.mkdir('logs')
-            
             # Set up file handler
             file_handler = RotatingFileHandler(
-                'logs/sod_backend.log',
+                os.path.join(app.root_path, app.config['LOG_FILE']),
                 maxBytes=10240,
                 backupCount=10
             )
@@ -66,8 +68,16 @@ class Config:
                 '%(asctime)s %(levelname)s: %(message)s '
                 '[in %(pathname)s:%(lineno)d]'
             ))
-            file_handler.setLevel(logging.INFO)
+            file_handler.setLevel(getattr(logging, app.config['LOG_LEVEL']))
             app.logger.addHandler(file_handler)
             
-            app.logger.setLevel(logging.INFO)
+            # Also log to stdout for container logs
+            stream_handler = logging.StreamHandler()
+            stream_handler.setFormatter(logging.Formatter(
+                '%(asctime)s %(levelname)s: %(message)s'
+            ))
+            stream_handler.setLevel(getattr(logging, app.config['LOG_LEVEL']))
+            app.logger.addHandler(stream_handler)
+            
+            app.logger.setLevel(getattr(logging, app.config['LOG_LEVEL']))
             app.logger.info('SOD Backend startup') 

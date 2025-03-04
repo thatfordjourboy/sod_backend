@@ -7,26 +7,66 @@ services:
       mkdir -p instance
       mkdir -p app/static/uploads
       mkdir -p app/static/qrcodes
+      mkdir -p logs
       flask db upgrade
       python create_admin.py
       python init_audit_permissions.py
-    startCommand: gunicorn --workers 4 --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - wsgi:application
+    startCommand: gunicorn --workers 4 --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - --log-level info wsgi:application
     envVars:
+      # Flask configuration
       - key: FLASK_APP
         value: app
       - key: FLASK_ENV
         value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URI
+        value: sqlite:///instance/app.db
+
+      # Python configuration
       - key: PYTHON_VERSION
         value: 3.9.12
       - key: PYTHONPATH
         value: /opt/render/project/src/backend
+      
+      # Static files configuration
       - key: STATIC_FOLDER
         value: app/static
       - key: UPLOAD_FOLDER
         value: app/static/uploads
       - key: QR_CODE_FOLDER
         value: app/static/qrcodes
+      
+      # Email configuration
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "True"
+      - key: MAIL_USE_SSL
+        value: "False"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
+      - key: MAIL_REPLY_TO
+        sync: false
+      - key: MAIL_DEBUG
+        value: "False"
+      - key: MAIL_MAX_EMAILS
+        value: "100"
+      - key: MAIL_SUPPRESS_SEND
+        value: "False"
+      - key: MAIL_ASCII_ATTACHMENTS
+        value: "False"
+    
     disk:
       name: uploads
       mountPath: /opt/render/project/src/backend/app/static
-      sizeGB: 1 
+      sizeGB: 1
+    
+    healthCheckPath: /health
+    healthCheckTimeout: 100 
